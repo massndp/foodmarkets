@@ -68,11 +68,14 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+
+    //epoch
     public function getCreatedAtAttribute($value)
     {
         return Carbon::parse($value)->timestamp;
     }
 
+    //epoch
     public function getUpdatedAtAttribute($value)
     {
         return Carbon::parse($value)->timestamp;
