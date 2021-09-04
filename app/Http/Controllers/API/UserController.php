@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -28,7 +29,7 @@ class UserController extends Controller
                 ], 'Authentication Failed', 500);
             }
 
-            //Pengecekan jika Email tidak sesuai
+            //Pengecekan jika user tidak sesuai
             $user = User::where('email', $request->email)->first();
 
             if(!Hash::check($request->password, $user->password, [])){
@@ -37,7 +38,7 @@ class UserController extends Controller
 
             //Jika data sesuai maka lanjutkan proses login
             $tokenResult = $user->createToken('authToken')->plainTextToken;
-            
+
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer', 
@@ -93,5 +94,46 @@ class UserController extends Controller
         $token = $request->user()->currentAccessToken()->delete();
 
         return ResponseFormatter::success($token, 'Token Revoked');
+    }
+
+    public function fetch(Request $request)
+    {
+        return ResponseFormatter::success($request->user(), 'Data profile user berhasil ditambahkan');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $data = $request->all();
+        
+        $user = Auth::user();
+        $user->update($data);
+
+        return ResponseFormatter::success($user, 'Profile Updated');
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|image|max:2048'
+        ]);
+
+        //Jika upload gagal
+        if($validator->fails())
+        {
+            return ResponseFormatter::error([
+                'error' => $validator->errors()
+            ], 'Update photo fails', 401);
+        }
+
+        //jika berhasil
+        if($request->file('file'))
+        {
+            $file = $request->file->store('assets/user', 'public');
+        }
+
+        //simpan ke database
+        $user = Auth::user();
+        $user->profile_photo_path = $file;
+        $user->update();
     }
 }
