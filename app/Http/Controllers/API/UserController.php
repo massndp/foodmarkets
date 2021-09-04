@@ -135,5 +135,7 @@ class UserController extends Controller
         $user = Auth::user();
         $user->profile_photo_path = $file;
         $user->update();
+
+        return ResponseFormatter::success([$file], 'File success uploaded');
     }
 }
