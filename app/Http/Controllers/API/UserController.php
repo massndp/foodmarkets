@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Actions\Fortify\PasswordValidationRules;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -13,6 +14,14 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+
+    use PasswordValidationRules;
+
+    public function fetch(Request $request)
+    {
+        return ResponseFormatter::success($request->user(), 'Data profile user berhasil ditambahkan');
+    }
+    
     public function login(Request $request)
     {
         try{
@@ -96,10 +105,7 @@ class UserController extends Controller
         return ResponseFormatter::success($token, 'Token Revoked');
     }
 
-    public function fetch(Request $request)
-    {
-        return ResponseFormatter::success($request->user(), 'Data profile user berhasil ditambahkan');
-    }
+   
 
     public function updateProfile(Request $request)
     {
