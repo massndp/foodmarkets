@@ -24,10 +24,10 @@ class CreateUsersTable extends Migration
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
 
-            $table->string('address');
-            $table->string('house_number');
-            $table->string('phone_number');
-            $table->string('city');
+            $table->string('address')->nullable();
+            $table->string('house_number')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->string('city')->nullable();
             $table->string('roles')->default('USER');
             $table->timestamps();
         });
