@@ -15,7 +15,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $user = User::paginate(2);
+        $user = User::paginate(10);
 
         return view('users.index', [
             'user' => $user
@@ -43,7 +43,7 @@ class UserController extends Controller
   
         $data = $request->all();
 
-        $data['picturePath'] = $request->file('picturePath')->store('assets/user', 'public');
+        $data['profile_photo_path'] = $request->file('profile_photo_path')->store('assets/user', 'public');
 
         User::create($data);
 
@@ -69,7 +69,10 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        //
+        $user = User::find($id);
+        return view('users.edit', [
+            'user' => $user
+        ]);
     }
 
     /**
@@ -79,9 +82,17 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $data = $request->all();
+        if($request->file('profile_photo_path'))
+        {
+            $data['profile_photo_path'] = $request->file('profile_pictute_path')->store('assets/user', 'public');
+        }
+
+        $user->update($data);
+
+        return redirect()->route('users.index');
     }
 
     /**
@@ -90,8 +101,10 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return redirect()->route('users.index');
     }
 }

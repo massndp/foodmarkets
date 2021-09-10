@@ -37,4 +37,20 @@ class UserRequest extends FormRequest
             'city' => 'required'
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'name.required' => 'Nama wajib diisi',
+            'email.required' => 'Email wajib diisi',
+            'email.unique' => 'Email sudah terdaftar',
+            'password.required' => 'Password wajib diisi', 
+            'address.required' => 'Alamat wajib diisi',
+            'house_number.required' => 'No rumah wajib diisi',
+            'phone_number.required' => 'No ponsel wajib diisi',
+            'city.required.required' => 'Kota wajib diisi',
+            'roles.required' => 'Roles wajib diisi', 
+        ];
+
+    }
 }
