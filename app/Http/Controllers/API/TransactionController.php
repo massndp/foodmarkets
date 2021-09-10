@@ -69,7 +69,7 @@ class TransactionController extends Controller
             'user_id' => 'required|exists:users,id',
             'quantity' => 'required', 
             'total' => 'required', 
-            'status' => 'required'
+            'status' => ''
         ]);
 
         $transaction = Transaction::create([
