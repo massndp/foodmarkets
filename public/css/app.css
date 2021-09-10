@@ -1731,6 +1731,9 @@ select {
 .uppercase {
 	text-transform: uppercase;
 }
+.italic {
+	font-style: italic;
+}
 .leading-5 {
 	line-height: 1.25rem;
 }
@@ -2318,6 +2321,10 @@ select {
 
 	.md\:grid {
 		display: grid;
+	}
+
+	.md\:w-1\/2 {
+		width: 50%;
 	}
 
 	.md\:grid-cols-3 {
