@@ -5,12 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Midtrans\Config;
 use Midtrans\Snap;
-
 
 class TransactionController extends Controller
 {
@@ -23,53 +21,47 @@ class TransactionController extends Controller
 
         if($id)
         {
-            $transaction = Transaction::with(['food', 'user'])->find($id);
+            $transaction = Transaction::with(['food','user'])->find($id);
 
             if($transaction)
-            {
                 return ResponseFormatter::success(
-                    $transaction, 'Data transaksi berhasil diambil'
+                    $transaction,
+                    'Data transaksi berhasil diambil'
                 );
-            }else{
+            else
                 return ResponseFormatter::error(
-                    null, 'Data transaksi tidak ada', 404
+                    null,
+                    'Data transaksi tidak ada',
+                    404
                 );
-            }
         }
 
-        $transaction = Transaction::with(['food', 'user'])->where('user_id', Auth::user()->id);
+        $transaction = Transaction::with(['food','user'])->where('user_id', Auth::user()->id);
 
         if($food_id)
-        {
             $transaction->where('food_id', $food_id);
-        }
 
         if($status)
-        {
             $transaction->where('status', $status);
-        }
 
         return ResponseFormatter::success(
-            $transaction->paginate($limit), 'Data list transaksi berhasil diambil'
+            $transaction->paginate($limit),
+            'Data list transaksi berhasil diambil'
         );
     }
 
-    public function update(Request $request, $id)
-    {
-        $transaction = Transaction::find($id);
-        $transaction->update($request->all);
-
-        return ResponseFormatter::success($transaction, 'Transaksi berhasil diupdate');
-    }
-
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function checkout(Request $request)
     {
         $request->validate([
             'food_id' => 'required|exists:food,id',
             'user_id' => 'required|exists:users,id',
-            'quantity' => 'required', 
-            'total' => 'required', 
-            'status' => ''
+            'quantity' => 'required',
+            'total' => 'required',
+            'status' => 'required',
         ]);
 
         $transaction = Transaction::create([
@@ -77,45 +69,57 @@ class TransactionController extends Controller
             'user_id' => $request->user_id,
             'quantity' => $request->quantity,
             'total' => $request->total,
-            'status' => $request->status
+            'status' => $request->status,
+            'payment_url' => ''
         ]);
 
-        //Konfigurasi Midtrans
+        // Konfigurasi midtrans
         Config::$serverKey = config('services.midtrans.serverKey');
         Config::$isProduction = config('services.midtrans.isProduction');
         Config::$isSanitized = config('services.midtrans.isSanitized');
         Config::$is3ds = config('services.midtrans.is3ds');
 
-        //Panggil transaksi yang sudah dibuat
-        $transaction = Transaction::with('food', 'user')->find($transaction->id);
+        $transaction = Transaction::with(['food','user'])->find($transaction->id);
 
-        //membuat transaksi midtrans
-        $midtrans = [
-            'transaction_details' => [
-                'order_id' => $transaction->id,
+        $midtrans = array(
+            'transaction_details' => array(
+                'order_id' =>  $transaction->id,
                 'gross_amount' => (int) $transaction->total,
-            ],
+            ),
+            'customer_details' => array(
+                'first_name'    => $transaction->user->name,
+                'email'         => $transaction->user->email
+            ),
+            'enabled_payments' => array('gopay','bank_transfer'),
+            'vtweb' => array()
+        );
 
-            'customer_details' => [
-                'first_name' => $transaction->user->name,
-                'email' => $transaction->user->email
-            ],
-
-            'enabled_payments' => ['gopay', 'bank_transfer'],
-            'vtweb' => []
-        ];
-
-        //memanggil midtrans
-        try{
-            //Ambil halaman payment midtrans
+        try {
+            // Ambil halaman payment midtrans
             $paymentUrl = Snap::createTransaction($midtrans)->redirect_url;
+
             $transaction->payment_url = $paymentUrl;
             $transaction->save();
 
-            return ResponseFormatter::success($transaction, 'Transaksi berhasil');
+            // Redirect ke halaman midtrans
+            return ResponseFormatter::success($transaction,'Transaksi berhasil');
         }
-        catch(Exception $e){
-            return ResponseFormatter::error($e->getMessage(), 'Transaksi gagal');
+        catch (Exception $e) {
+            return ResponseFormatter::error($e->getMessage(),'Transaksi Gagal');
         }
+    }
+
+    /**
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, $id)
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        $transaction->update($request->all());
+
+        return ResponseFormatter::success($transaction,'Transaksi berhasil diperbarui');
     }
 }

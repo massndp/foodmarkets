@@ -20,7 +20,7 @@ class CreateTransactionsTable extends Migration
             $table->integer('quantity');
             $table->integer('total');
             $table->string('status');
-            $table->text('paymnent_url');
+            $table->text('payment_url');
             $table->softDeletes();
             $table->timestamps();
         });
